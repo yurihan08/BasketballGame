@@ -2,7 +2,14 @@ let shotHistory = [];
 let attempts = 0;
 let makes = 0;
 let lastShot = "None";
-let maxShots = 10; 
+let maxShots = 10;
+
+let ballX = 400;
+let ballY = 320;
+let targetX = 400;
+let targetY = 125;
+let ballMoving = false;
+let shotResult = "";
 
 let layupBtn;
 let midBtn;
@@ -22,6 +29,8 @@ function draw() {
   background(230, 240, 255);
 
   drawCourt();
+  animateBall();
+  drawBall();
   drawStats();
 
   if (attempts < maxShots) {
@@ -48,23 +57,49 @@ function draw() {
 
 function drawCourt() {
   fill(255);
-  rect(250, 40, 300, 220);
+  rect(250, 45, 300, 230);
 
-  stroke(0);
-  strokeWeight(4);
-  line(350, 90, 450, 90);
+  fill(180);
+  rect(360, 70, 80, 50);
 
+  fill(255, 80, 0);
+  rect(350, 120, 100, 8);
+
+  stroke(255, 80, 0);
+  strokeWeight(3);
   noFill();
-  arc(400, 90, 120, 120, 0, PI);
-
+  ellipse(400, 130, 90, 25);
   noStroke();
-  fill(255, 100, 0);
-  rect(320, 60, 160, 10);
 
-  fill(0);
+  fill(255);
+  rect(0, 300, width, 10);
+
+  fill(50, 100, 200);
   textAlign(CENTER);
   textSize(30);
   text("Basketball Shot Simulator", width / 2, 30);
+}
+
+function drawBall() {
+  fill(255, 140, 0);
+  circle(ballX, ballY, 32);
+
+  stroke(0);
+  line(ballX - 16, ballY, ballX + 16, ballY);
+  line(ballX, ballY - 16, ballX, ballY + 16);
+  noStroke();
+}
+
+function animateBall() {
+  if (ballMoving) {
+    ballX = lerp(ballX, targetX, 0.08);
+    ballY = lerp(ballY, targetY, 0.08);
+
+    if (dist(ballX, ballY, targetX, targetY) < 5) {
+      ballMoving = false;
+      lastShot = shotResult;
+    }
+  }
 }
 
 function drawStats() {
@@ -91,6 +126,10 @@ function drawButton(btn) {
 }
 
 function mousePressed() {
+  if (ballMoving) {
+    return;
+  }
+
   if (attempts < maxShots) {
     if (isClicked(layupBtn)) {
       takeShot("layup");
@@ -122,19 +161,24 @@ function takeShot(type) {
   } else if (type === "midrange") {
     chance = 0.6;
     points = 2;
-  } else if (type === "three") {
+  } else {
     chance = 0.4;
     points = 3;
   }
+
   attempts++;
+
+  ballX = 400;
+  ballY = 320;
+  ballMoving = true;
 
   if (random(1) < chance) {
     shotHistory.push(points);
     makes++;
-    lastShot = "Make";
+    shotResult = "Make";
   } else {
     shotHistory.push(0);
-    lastShot = "Miss";
+    shotResult = "Miss";
   }
 }
 
@@ -144,6 +188,7 @@ function calculateScore() {
   for (let i = 0; i < shotHistory.length; i++) {
     total = total + shotHistory[i];
   }
+
   return total;
 }
 
@@ -172,4 +217,8 @@ function restartGame() {
   attempts = 0;
   makes = 0;
   lastShot = "None";
+  ballX = 400;
+  ballY = 320;
+  ballMoving = false;
+  shotResult = "";
 }
